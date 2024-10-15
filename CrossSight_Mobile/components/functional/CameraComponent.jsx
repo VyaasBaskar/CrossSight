@@ -14,7 +14,6 @@ const CameraComponent = () => {
   const cameraRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [hasResult, setHasResult] = useState(false);
   const [base64Image, setBase64Image] = useState("");
 
@@ -31,21 +30,19 @@ const CameraComponent = () => {
     if (cameraRef.current && isCameraReady) {
       try {
         const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.1,
+          quality: 0.05,
         });
-        console.log("Captured photo:", photo.uri);
 
         await sendPhotoToServer(photo.uri);
       } catch (error) {
-        console.error("Error taking picture:", error);
+        console.error("ERROR [Capture]", error);
       }
     } else {
-      console.log("Camera is not ready");
+      console.log("CAMERA NOT READY");
     }
   };
 
   const sendPhotoToServer = async (uri) => {
-    setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("raw_img", {
@@ -55,7 +52,7 @@ const CameraComponent = () => {
       });
 
       const response = await fetch(
-        "http://192.168.50.17:5000/crosswalk_detection",
+        "http://10.18.91.61:5000/crosswalk_detection",
         {
           method: "POST",
           headers: {
@@ -64,21 +61,17 @@ const CameraComponent = () => {
           body: formData,
         }
       );
-      console.log("Sending to server...");
       const result = await response.json();
-      console.log("Server response:", result);
 
-      setHasResult(true);
       setBase64Image(result["annotated_img"]);
-      setIsUploading(false);
+      setHasResult(true);
     } catch (error) {
-      console.error("Error uploading image:", error);
-      setIsUploading(false);
+      console.error("ERROR [Processing Image]:", error);
     }
   };
 
   const onCameraReady = () => {
-    console.log("Camera ready.");
+    console.log("CAMERA READY");
     setIsCameraReady(true);
   };
 
@@ -87,7 +80,7 @@ const CameraComponent = () => {
       if (isCameraReady) {
         takePicture();
       }
-    }, 1000);
+    }, 200);
     return () => clearInterval(intervalId);
   }, [isCameraReady]);
 
@@ -102,7 +95,10 @@ const CameraComponent = () => {
   return (
     <View style={styles.container}>
       {hasResult ? (
-        <Image source={{ uri: base64Image }} style={{ height: "50%" }} />
+        <Image
+          source={{ uri: `data:image/png;base64,${base64Image}` }}
+          style={{ height: "50%" }}
+        />
       ) : (
         <View></View>
       )}

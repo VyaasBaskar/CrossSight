@@ -18,7 +18,7 @@ def crosswalk_detection():
     
     comp_img = __RUN_SEGMENTATION(img)
     
-    return {"success": 1, "annotated_img": __IM_ENCODE(img)}
+    return {"success": 1, "annotated_img": __IM_ENCODE(comp_img)}
 
 if __name__ == '__main__':
     CORS(app)
