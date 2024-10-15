@@ -11,6 +11,13 @@ import {
 import { Camera } from "expo-camera/legacy";
 
 const CameraComponent = () => {
+  const SERVER_PREFIX = "http://";
+  const SERVER_IP_ADDRESS = "192.168.50.17";
+  const SERVER_PORT = "5000";
+
+  const ASK_ADDRESS =
+    SERVER_PREFIX + SERVER_IP_ADDRESS + ":" + SERVER_PORT + "/";
+
   const cameraRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
@@ -51,22 +58,25 @@ const CameraComponent = () => {
         type: "image/jpeg",
       });
 
-      const response = await fetch(
-        "http://10.18.91.61:5000/crosswalk_detection",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          body: formData,
-        }
-      );
+      fetch(ASK_ADDRESS + "upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+
+      const response = await fetch(ASK_ADDRESS + "get_annotated", {
+        method: "GET",
+      });
       const result = await response.json();
 
       setBase64Image(result["annotated_img"]);
       setHasResult(true);
     } catch (error) {
+      setHasResult(false);
       console.error("ERROR [Processing Image]:", error);
+      console.log(ASK_ADDRESS);
     }
   };
 
