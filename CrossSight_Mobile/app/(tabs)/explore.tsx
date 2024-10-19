@@ -7,10 +7,18 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 
+import { View } from "react-native";
+
+import CrossTalk from "@/components/functional/CrossTalk";
 import CameraComponent from "@/components/functional/CameraComponent";
 
 export default function TabTwoScreen() {
-  return <CameraComponent></CameraComponent>;
+  return (
+    <View style={{ height: "100%" }}>
+      <CameraComponent></CameraComponent>
+      <CrossTalk></CrossTalk>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

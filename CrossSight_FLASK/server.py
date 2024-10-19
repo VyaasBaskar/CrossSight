@@ -66,6 +66,16 @@ def get_annotated():
         print("ERROR [Get Annotated]: Error sending image. Exiting...")
         print(exc)
         return {"success": 0}
+    
+@app.route('/get_crosswalk_data', methods=['GET'])
+def get_crosswalk_data():
+    global shape
+
+    if shape is None:
+        print("ERROR [Get Shape]: Shape is None. Exiting...")
+        return {"success": 0}
+    
+    return {"success": 1, "drift": __GET_DRIFT(shape), "detected": shape[0][0] != 0.0}
 
 
 if __name__ == '__main__':
