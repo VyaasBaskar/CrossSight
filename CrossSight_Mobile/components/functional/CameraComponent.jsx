@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Camera } from "expo-camera/legacy";
+import AudioComponent from "./AudioComponent";
 
 const CameraComponent = () => {
   const SERVER_PREFIX = "http://";

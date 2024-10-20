@@ -1,8 +1,14 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 
 from crosswalk_seg import __RUN_SEGMENTATION, __CALCULATE_SHAPE, __DRAW_MASK, __DRAW_SHAPE, __GET_DRIFT
 from img_utils import __IM_DECODE, __IM_ENCODE
+
+import speech_recognition as sr
+
+from gpt import vehicular_detection, sign_reading
+
+from transcribe import transcribe
 
 import cv2
 
@@ -22,6 +28,40 @@ last_cw = {"success": 0}
 
 voice_cmds = []
 
+text_audios = []
+
+@app.route('/transcribe', methods=['POST'])
+def transcribe_audio():
+    global text_audios
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400 #no return
+
+    file = request.files['file']
+
+    # print the file name
+    print(file.filename)
+    # store the file in the current directory
+    file.save(file.filename)
+    text = transcribe()
+    text_audios.append(text)
+
+@app.route('/send_image', methods=['POST'])
+def send_image():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+    file = request.files['file']
+    print(file.filename)
+    file.save("image.jpg")
+    return jsonify("Image received")
+
+@app.route('/gpt', methods=['POST'])
+def gpt3():
+    data = request.json
+    message = data['message']
+    response = chat_completion(message)
+    return jsonify(response)
+
 
 def process_image():
     global mask_image, last_image, annotated_image, shape, processing_time
@@ -37,6 +77,8 @@ def process_image():
         print("ERROR [Process Image]: Could not process image. Exiting...")
         print(exc)
 
+
+
 @app.route('/upload', methods=['POST'])
 def upload():
     global last_image
@@ -48,6 +90,7 @@ def upload():
     try:
         raw_img = request.files['raw_img']
         last_image = __IM_DECODE(raw_img)
+        cv2.imwrite("img.png", last_image)
     except Exception as exc:
         print("ERROR [Upload]: Could not decode image. Exiting...")
         print(exc)
@@ -101,6 +144,19 @@ def loop_voice_cmds():
         voice_cmds.append("Drift corrected.")
     last_cw = new_cw
 
+    if len(text_audios) == 0:
+        return
+    
+    text = text_audios.pop(0)
+    text_list = text.split(" ")
+
+    if ("cars" in text_list or ("cross"  in text_list and "street" in text_list)):
+        voice_cmds.append(vehicular_detection(text))
+    elif ("read" in text_list or "sign" in text_list):
+        voice_cmds.append(sign_reading(text))
+    # else:
+    #     voice_cmds.append(chat_completion(text))
+    
 
 @app.route('/get_voice_cmd', methods=['GET'])
 def get_voice_cmd():

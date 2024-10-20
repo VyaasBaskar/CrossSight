@@ -11,12 +11,14 @@ import { View } from "react-native";
 
 import CrossTalk from "@/components/functional/CrossTalk";
 import CameraComponent from "@/components/functional/CameraComponent";
+import AudioComponent from "@/components/functional/AudioComponent";
 
 export default function TabTwoScreen() {
   return (
     <View style={{ height: "100%" }}>
       <CameraComponent></CameraComponent>
       <CrossTalk></CrossTalk>
+      <AudioComponent></AudioComponent>
     </View>
   );
 }
