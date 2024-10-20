@@ -11,19 +11,20 @@ const CrossTalk = () => {
   const SERVER_PORT = "5000";
 
   const ASK_ADDRESS =
-    SERVER_PREFIX +
-    SERVER_IP_ADDRESS +
-    ":" +
-    SERVER_PORT +
-    "/get_crosswalk_data";
+    SERVER_PREFIX + SERVER_IP_ADDRESS + ":" + SERVER_PORT + "/get_voice_cmd";
 
   const speak = async () => {
-    const text = "Q";
-    Speech.speak(text, {
-      language: "en-US",
-      pitch: 0.7,
-      rate: 1.0,
+    const response = await fetch(ASK_ADDRESS, {
+      method: "GET",
     });
+    const result = await response.json();
+    if (result["success"] == 1 || result["success"] == "1") {
+      Speech.speak(result["text"], {
+        language: "en-US",
+        pitch: 0.7,
+        rate: 1.0,
+      });
+    }
   };
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const CrossTalk = () => {
     soundObject.playAsync();
     const intervalId = setInterval(() => {
       speak();
-    }, 2000);
+    }, 500);
     return () => clearInterval(intervalId);
   }, []);
 

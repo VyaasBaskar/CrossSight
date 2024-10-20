@@ -18,6 +18,11 @@ processing_time = 0.0
 
 shape = None
 
+last_cw = {"success": 0}
+
+voice_cmds = []
+
+
 def process_image():
     global mask_image, last_image, annotated_image, shape, processing_time
 
@@ -52,7 +57,7 @@ def upload():
 
 @app.route('/get_annotated', methods=['GET'])
 def get_annotated():
-    global annotated_image
+    global annotated_image, last_image
 
     process_image()
 
@@ -61,21 +66,50 @@ def get_annotated():
         return {"success": 0}
     
     try:
-        return {"success": 1, "annotated_img": __IM_ENCODE(annotated_image), "processing_time": processing_time}
+        return {"success": 1, "annotated_img": __IM_ENCODE(last_image), "processing_time": processing_time}
     except Exception as exc:
         print("ERROR [Get Annotated]: Error sending image. Exiting...")
         print(exc)
         return {"success": 0}
     
-@app.route('/get_crosswalk_data', methods=['GET'])
 def get_crosswalk_data():
-    global shape
+    global shape, annotated_image
 
     if shape is None:
         print("ERROR [Get Shape]: Shape is None. Exiting...")
         return {"success": 0}
     
-    return {"success": 1, "drift": __GET_DRIFT(shape), "detected": shape[0][0] != 0.0}
+    drift = __GET_DRIFT(annotated_image, shape)
+    
+    return {"success": 1, "drift": drift, "detected": drift != 0.0}
+
+def loop_voice_cmds():
+    global voice_cmds
+    global last_cw
+
+    new_cw = get_crosswalk_data()
+
+    if new_cw["success"] == 1 and new_cw["detected"] and last_cw["success"] == 1 and not last_cw["detected"]:
+        voice_cmds.append("Crosswalk detected.")
+    elif new_cw["success"] == 1 and not new_cw["detected"] and last_cw["success"] == 1 and last_cw["detected"]:
+        voice_cmds.append("Crosswalk lost.")
+    elif new_cw["success"] == 1 and new_cw["drift"] > 0.3 and last_cw["success"] == 1 and abs(last_cw["drift"]) <= 0.3:
+        voice_cmds.append("Drifting right.")
+    elif new_cw["success"] == 1 and new_cw["drift"] < -0.3 and last_cw["success"] == 1 and abs(last_cw["drift"]) <= 0.3:
+        voice_cmds.append("Drifting left.")
+    elif new_cw["success"] == 1 and abs(new_cw["drift"]) < 0.3 and last_cw["success"] == 1 and abs(last_cw["drift"]) > 0.3:
+        voice_cmds.append("Drift corrected.")
+    last_cw = new_cw
+
+
+@app.route('/get_voice_cmd', methods=['GET'])
+def get_voice_cmd():
+    loop_voice_cmds()
+    if (voice_cmds.__len__() == 0):
+        return {"success": 0}
+    else:
+        return {"success": 1, "text": voice_cmds.pop(0)}
+
 
 
 if __name__ == '__main__':

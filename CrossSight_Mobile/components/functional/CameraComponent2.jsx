@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   View,
   Button,
@@ -6,9 +6,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
-import { Camera } from "expo-camera/legacy";
+import { Camera, CameraView, useCameraPermissions } from "expo-camera";
+import { captureRef } from "react-native-view-shot";
 
 const CameraComponent = () => {
   const SERVER_PREFIX = "http://";
@@ -18,36 +18,15 @@ const CameraComponent = () => {
   const ASK_ADDRESS =
     SERVER_PREFIX + SERVER_IP_ADDRESS + ":" + SERVER_PORT + "/";
 
+  const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
-  const [hasPermission, setHasPermission] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [hasResult, setHasResult] = useState(false);
-  const [base64Image, setBase64Image] = useState("");
 
-  useEffect(() => {
-    const requestCameraPermission = async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    };
-
-    requestCameraPermission();
-  }, []);
-
-  const takePicture = async () => {
-    if (cameraRef.current && isCameraReady) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.1,
-        });
-
-        await sendPhotoToServer(photo.uri);
-      } catch (error) {
-        console.error("ERROR [Capture]", error);
-      }
-    } else {
-      console.log("CAMERA NOT READY");
-    }
+  const onCameraReady = () => {
+    setIsCameraReady(true);
   };
+  const [base64Image, setBase64Image] = useState("");
 
   const sendPhotoToServer = async (uri) => {
     try {
@@ -80,50 +59,62 @@ const CameraComponent = () => {
     }
   };
 
-  const onCameraReady = () => {
-    console.log("CAMERA READY");
-    setIsCameraReady(true);
-  };
+  const takePicture = useCallback(async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.05,
+        });
+
+        // await sendPhotoToServer(photo);
+      } catch (error) {
+        console.error("ERROR [Capture]", error);
+      }
+    } else {
+      console.log("CAMERA NOT READY");
+    }
+  }, []);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (isCameraReady) {
-        takePicture();
-      }
-    }, 450);
+    const intervalId = setInterval(takePicture, 200);
     return () => clearInterval(intervalId);
-  }, [isCameraReady]);
+  }, []);
 
-  if (hasPermission === null) {
-    return <Text>Requesting camera permission...</Text>;
+  if (!permission) {
+    return <View />;
   }
 
-  if (hasPermission === false) {
-    return <Text>Camera permission denied.</Text>;
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>
+          Grant permission to access the camera...
+        </Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
       {hasResult ? (
-        <Image
-          source={{ uri: `data:image/png;base64,${base64Image}` }}
-          style={{ height: "50%" }}
-        />
+        <Image source={{ uri: base64Image }} style={{ height: "50%" }} />
       ) : (
         <View></View>
       )}
 
-      <Camera
-        style={styles.camera}
-        ref={cameraRef}
-        onCameraReady={onCameraReady}
-      ></Camera>
-
-      <View style={styles.overlay}>
-        <TouchableOpacity style={styles.captureButton} onPress={() => {}}>
-          <Text style={styles.buttonText}>Capture</Text>
-        </TouchableOpacity>
+      <View style={{ width: "100%", height: "100%" }}>
+        <CameraView
+          style={styles.camera}
+          onCameraReady={onCameraReady}
+          ref={cameraRef}
+          mute={true}
+        >
+          <Text style={{ color: "white" }}>qqq</Text>
+        </CameraView>
       </View>
+
+      <View style={styles.overlay}></View>
     </View>
   );
 };
