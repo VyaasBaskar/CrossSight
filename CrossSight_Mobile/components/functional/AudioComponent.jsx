@@ -53,7 +53,7 @@ const AudioComponent = () => {
   async function sendAudioToServer(uri) {
     setIsTranscribing(true);
     setTranscription("");
-    const serverUrl = "http://192.168.86.184:5001/transcribe"; // Update this
+    const serverUrl = "http://10.18.84.138:5000/transcribe"; // Update this
 
     try {
       console.log("Preparing to send audio file:", uri);

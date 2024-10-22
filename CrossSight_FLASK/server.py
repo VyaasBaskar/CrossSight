@@ -46,6 +46,8 @@ def transcribe_audio():
     text = transcribe()
     text_audios.append(text)
 
+    return jsonify(text), 200
+
 @app.route('/send_image', methods=['POST'])
 def send_image():
     if 'file' not in request.files:
@@ -129,6 +131,7 @@ def get_crosswalk_data():
 def loop_voice_cmds():
     global voice_cmds
     global last_cw
+    global text_audios
 
     new_cw = get_crosswalk_data()
 
@@ -150,7 +153,7 @@ def loop_voice_cmds():
     text = text_audios.pop(0)
     text_list = text.split(" ")
 
-    if ("cars" in text_list or ("cross"  in text_list and "street" in text_list)):
+    if ("cars" in text_list or "cross"  in text_list or "street" in text_list or "car" in text_list):
         voice_cmds.append(vehicular_detection(text))
     elif ("read" in text_list or "sign" in text_list):
         voice_cmds.append(sign_reading(text))
