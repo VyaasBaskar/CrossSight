@@ -154,11 +154,11 @@ def loop_voice_cmds():
     text_list = text.split(" ")
 
     if ("cars" in text_list or "cross"  in text_list or "street" in text_list or "car" in text_list):
-        voice_cmds.append(vehicular_detection(text))
-    elif ("read" in text_list or "sign" in text_list):
-        voice_cmds.append(sign_reading(text))
-    # else:
-    #     voice_cmds.append(chat_completion(text))
+        voice_cmds.append(vehicular_detection())
+    elif ("read" in text_list or "sign" in text_list or "signs" in text_list):
+        voice_cmds.append(sign_reading())
+    else:
+        voice_cmds.append("Please repeat.")
     
 
 @app.route('/get_voice_cmd', methods=['GET'])

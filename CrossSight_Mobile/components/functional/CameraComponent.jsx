@@ -13,7 +13,7 @@ import AudioComponent from "./AudioComponent";
 
 const CameraComponent = () => {
   const SERVER_PREFIX = "http://";
-  const SERVER_IP_ADDRESS = "10.18.84.138";
+  const SERVER_IP_ADDRESS = "10.18.92.135";
   const SERVER_PORT = "5000";
 
   const ASK_ADDRESS =
@@ -24,6 +24,7 @@ const CameraComponent = () => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [hasResult, setHasResult] = useState(false);
   const [base64Image, setBase64Image] = useState("");
+  const [mapVisible, setMapVisible] = useState(false);
 
   useEffect(() => {
     const requestCameraPermission = async () => {
@@ -119,12 +120,11 @@ const CameraComponent = () => {
         ref={cameraRef}
         onCameraReady={onCameraReady}
       ></Camera>
-
-      <View style={styles.overlay}>
+      {/* <View style={styles.overlay}>
         <TouchableOpacity style={styles.captureButton} onPress={() => {}}>
           <Text style={styles.buttonText}>Capture</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 };
