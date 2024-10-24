@@ -13,8 +13,8 @@ import AudioComponent from "./AudioComponent";
 
 const CameraComponent = () => {
   const SERVER_PREFIX = "http://";
-  const SERVER_IP_ADDRESS = "10.18.92.135";
-  const SERVER_PORT = "5000";
+  const SERVER_IP_ADDRESS = "192.168.86.184";
+  const SERVER_PORT = "5001";
 
   const ASK_ADDRESS =
     SERVER_PREFIX + SERVER_IP_ADDRESS + ":" + SERVER_PORT + "/";
